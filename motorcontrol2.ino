@@ -3,7 +3,7 @@
 
 
 /* Rotary encoder read example */
-#define ENC_A 3
+#define ENC_A 2
 #define ENC_PORT PINC
 #define DC_MOTOR 9
 
@@ -45,11 +45,13 @@ void setup()
  
 void loop()
 {
-
+    int rounds = 50;
     
-    if( (encoderValue % 50) == 0 ) {
+    if( (encoderValue % rounds) == 0 ) {
+      Serial.print("encodervalue ");
+      Serial.println(encoderValue);
       time_end = micros(); 
-      omega = (50 * 2*pi * pow(10,6)) / (time_end - time_start);
+      omega = (rounds * 2*pi * pow(10,6)) / (time_end - time_start);
       Serial.print("angular velocity: ");
       Serial.println(omega, 5);
       time_start = micros();
