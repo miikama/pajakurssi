@@ -1,0 +1,117 @@
+#include "Time.h"
+#include "math.h"
+#include <Adafruit_NeoPixel.h>
+#ifdef __AVR__
+  #include <avr/power.h>
+#endif
+
+#define ENC_A 2
+#define ENC_PORT PINC
+#define DC_MOTOR 9
+#define LED_PIN 6
+
+Adafruit_NeoPixel strip = Adafruit_NeoPixel(8, LED_PIN, NEO_GRB + NEO_KHZ800);
+
+  int array[][8][3] = {
+    {{124, 109, 39},{124, 109, 39},{124, 109, 39},{124, 109, 39},{124, 109, 39},{124, 109, 39},{124, 109, 39},{124, 109, 39}},
+    {{45, 83, 199}, {45, 83, 199}, {45, 83, 199}, {45, 83, 199}, {45, 83, 199}, {45, 83, 199}, {45, 83, 199}, {45, 83, 199}}
+  };
+
+time_t time_start = micros();
+time_t time_end = 0; 
+
+time_t from_last_speedup = 0;
+time_t speeduptime = millis();
+
+const float pi = 3.141593;
+float target_w = 0; 
+float omega = (2*pi * pow(10,6)) / (time_end - time_start);   //angular velocity rad/s
+
+volatile int encoderValue = 0;
+
+//void count(void); // code for counting the increasing values of encoder ticks 
+
+ 
+void setup()
+{
+ 
+  
+  Serial.begin (9600);  
+  Serial.println("Start");
+  Serial.println("give the target angular velocity (voltage between 0 and 255)");
+  target_w = read_serial();
+  
+  //starting motor and waiting for a bit
+  analogWrite(DC_MOTOR, target_w);
+  delay(10); 
+ 
+  /* Setup encoder pins as inputs */
+  pinMode(ENC_A, INPUT);
+  //digitalWrite(ENC_A, LOW);
+  attachInterrupt(0,count,CHANGE);
+  strip.begin();
+  strip.show();
+ 
+}
+ 
+void loop()
+{
+    int rounds = 50;
+    
+    if( (encoderValue % rounds) == 0 ) {
+      Serial.print("encodervalue ");
+      Serial.println(encoderValue);
+      time_end = micros(); 
+      omega = (rounds * 2*pi * pow(10,6)) / (time_end - time_start);
+      Seria1l.print("angular velocity: ");
+      Serial.println(omega, 5);
+      time_start = micros();
+    }
+      int delay = ((sizeof(array)/sizeof(array[0]))/pi)/omega;  
+      from_array(delay);
+
+  
+}
+
+
+/* reads the serial for user inputted numbers*/
+int read_serial() 
+{
+  char intBuffer[12];
+  String intData = "";
+  int delimiter = (int) '\n';
+  
+  while(!Serial.available());
+    while(1){
+      int ch = Serial.read();
+      if(ch == -1) {}
+      else if (ch == delimiter) {
+        break;
+      }
+      else {
+        intData += (char) ch;
+    }
+  }
+  int intLength = intData.length() +1;
+  intData.toCharArray(intBuffer, intLength);
+  intData = "";
+  int i = atoi(intBuffer);
+  return i;
+}
+
+void fromArray(uint8_t wait){
+  for(int i=0; i<2; i++){
+    for (int j=0; j<8; j++){
+      strip.setPixelColor(j, strip.Color(array[i][j][0],array[i][j][1],array[i][j][2]));
+    }
+    strip.show();
+    delay(wait);
+  } 
+} 
+ 
+ 
+//used for the pin interrupt
+void count()
+{
+    encoderValue++;
+}
