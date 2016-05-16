@@ -28,6 +28,9 @@ float target_w = 0;
 float omega = (2*pi * pow(10,6)) / (time_end - time_start);   //angular velocity rad/s
 
 volatile int encoderValue = 0;
+int notCounted = 1;
+int lastEncValue = 0;
+
 
 //void count(void); // code for counting the increasing values of encoder ticks 
 
@@ -35,6 +38,7 @@ volatile int encoderValue = 0;
 void setup()
 {
  
+  analogWrite(DC_MOTOR, 0);
   
   Serial.begin (9600);  
   Serial.println("Start");
@@ -48,7 +52,7 @@ void setup()
   /* Setup encoder pins as inputs */
   pinMode(ENC_A, INPUT);
   //digitalWrite(ENC_A, LOW);
-  attachInterrupt(0,count,CHANGE);
+  attachInterrupt(0,count,RISING);
   strip.begin();
   strip.show();
  
@@ -58,17 +62,23 @@ void loop()
 {
     int rounds = 50;
     
-    if( (encoderValue % rounds) == 0 ) {
-      Serial.print("encodervalue ");
-      Serial.println(encoderValue);
+    if(encoderValue > lastEncValue){
+      notCounted = 1;
+    }
+    
+    
+    
+    if( ((encoderValue % rounds ) == 0) & notCounted ) {
       time_end = micros(); 
       omega = (rounds * 2*pi * pow(10,6)) / (time_end - time_start);
-      Seria1l.print("angular velocity: ");
+      Serial.print("angular velocity: ");
       Serial.println(omega, 5);
       time_start = micros();
+      lastEncValue = encoderValue;
+      notCounted = 0;
     }
-      int delay = ((sizeof(array)/sizeof(array[0]))/pi)/omega;  
-      from_array(delay);
+      int delay_t = ((sizeof(array)/sizeof(array[0]))/pi)/omega;  
+      fromArray(delay_t);
 
   
 }
