@@ -55,12 +55,6 @@ int16_t read_encoder()
 {
   static int16_t enc_states[] = {0,-1,1,0,1,0,0,-1,-1,0,0,1,0,1,-1,0};
   static uint16_t old_AB = 0;
-}  
-  
-  
-  
-  
-  
   /**/
   old_AB <<= 2;                   //remember previous state
   old_AB |= ( ENC_PORT & 0x03 );  //add current state
